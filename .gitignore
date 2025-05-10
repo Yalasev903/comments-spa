@@ -1,0 +1,12 @@
+vendor/
+node_modules/
+.env
+.env.*
+storage/*.key
+/public/storage
+/storage/logs/*.log
+.idea/
+.vscode/
+*.sqlite
+npm-debug.log
+docker-compose.override.yml
