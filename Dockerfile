@@ -12,18 +12,20 @@ RUN apt-get update && apt-get install -y \
 # Установка Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Установка рабочей директории
+# Рабочая директория
 WORKDIR /var/www
 
-# Копирование файлов проекта
+# Копируем весь проект
 COPY . .
 
 # Установка прав
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
-# Node.js зависимости
+# Установка JS-зависимостей и билд фронта
 RUN npm install && npm run build
 
 EXPOSE 8000
+
+# По умолчанию запускается php-fpm
 CMD ["php-fpm"]

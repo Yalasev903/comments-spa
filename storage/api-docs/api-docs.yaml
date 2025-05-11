@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: Комментарии API
+  version: 1.0.0
+  description: API для древовидных комментариев
+
+servers:
+  - url: http://localhost/api
+
+paths:
+  /comments:
+    get:
+      summary: Получить список комментариев
+      tags: [Comments]
+      responses:
+        '200':
+          description: Список комментариев
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentTree'
+
+    post:
+      summary: Добавить комментарий
+      tags: [Comments]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - user_name
+                - email
+                - text
+                - captcha
+              properties:
+                user_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                home_page:
+                  type: string
+                  format: uri
+                text:
+                  type: string
+                captcha:
+                  type: string
+                attachment:
+                  type: string
+                  format: binary
+                parent_id:
+                  type: integer
+      responses:
+        '201':
+          description: Успешно создан
+        '422':
+          description: Ошибка валидации
+
+  /comments/{id}/download:
+    get:
+      summary: Скачать вложение
+      tags: [Comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Файл найден
+        '404':
+          description: Не найден
+
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_name:
+          type: string
+        email:
+          type: string
+        home_page:
+          type: string
+          nullable: true
+        text:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+        attachment_path:
+          type: string
+          nullable: true
+        attachment_type:
+          type: string
+          enum: [image, text]
+        created_at:
+          type: string
+          format: date-time
+
+    CommentTree:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Comment'
+              - type: object
+                properties:
+                  children:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
