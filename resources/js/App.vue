@@ -1,14 +1,19 @@
 <template>
      <div class="container mt-5">
-       <h1 class="text-center">Приложение комментариев</h1>
+       <h1 class="text-center mb-4">Приложение комментариев</h1>
+       <comment-form @comment-added="refreshComments" />
+       <comment-tree :reload-key="reloadKey" />
      </div>
    </template>
    
    <script setup>
-   // Здесь пока ничего
-   </script>
+   import CommentForm from './components/CommentForm.vue'
+   import CommentTree from './components/CommentTree.vue'
+   import { ref } from 'vue'
    
-   <style scoped>
-   /* Можешь добавить стили позже */
-   </style>
+   const reloadKey = ref(0)
+   function refreshComments() {
+     reloadKey.value++
+   }
+   </script>
    
