@@ -8,18 +8,23 @@ use App\Models\Comment;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Response;
+use App\Jobs\NotifyAdminOfNewComment;
+use App\Events\CommentCreated;
 
 class CommentController extends Controller
 {
     public function index()
     {
-        $comments = Comment::with('children')
-            ->whereNull('parent_id')
-            ->latest()
-            ->paginate(25);
+        $comments = Cache::remember('comments_tree', 60, function () {
+            return Comment::with('children')
+                ->whereNull('parent_id')
+                ->latest()
+                ->paginate(25);
+        });
 
         return response()->json($comments);
     }
@@ -35,7 +40,7 @@ class CommentController extends Controller
             'text'       => 'required|string',
             'captcha'    => 'required|string',
             'parent_id'  => 'nullable|exists:comments,id',
-            'attachment' => 'nullable|file|max:1024|mimes:jpg,jpeg,png,gif,txt', // 1MB max
+            'attachment' => 'nullable|file|max:1024|mimes:jpg,jpeg,png,gif,txt',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -57,16 +62,14 @@ class CommentController extends Controller
             $fileName = uniqid('comment_', true) . '.' . $ext;
             $uploadPath = 'attachments/' . $fileName;
 
-            // Создаём папку при необходимости
             if (!Storage::disk('public')->exists('attachments')) {
                 Storage::disk('public')->makeDirectory('attachments');
                 Log::info('Папка attachments создана вручную');
             }
 
             try {
-                // Обработка изображений
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
-                    Log::info('🖼 Обработка загружаемого изображения', [
+                    Log::info('Обработка изображения', [
                         'type' => $ext,
                         'size' => $file->getSize(),
                         'mime' => $file->getMimeType(),
@@ -81,19 +84,17 @@ class CommentController extends Controller
                     Storage::disk('public')->put($uploadPath, (string) $image->encode());
                     $data['attachment_type'] = 'image';
                 } else {
-                    // Текстовые файлы
-                    Log::info('📎 Прикреплён текстовый файл', ['name' => $fileName]);
+                    Log::info('Прикреплён текстовый файл', ['name' => $fileName]);
                     Storage::disk('public')->putFileAs('attachments', $file, $fileName);
                     $data['attachment_type'] = 'text';
                 }
 
                 $data['attachment_path'] = $uploadPath;
-                Log::info('Вложение успешно сохранено', ['path' => $uploadPath]);
+                Log::info('Вложение сохранено', ['path' => $uploadPath]);
             } catch (\Throwable $e) {
-                Log::error('❗ Ошибка при загрузке вложения: ' . $e->getMessage(), [
+                Log::error(' Ошибка при загрузке вложения: ' . $e->getMessage(), [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 return response()->json([
@@ -102,10 +103,14 @@ class CommentController extends Controller
             }
         }
 
-        // Сохраняем комментарий
         $comment = Comment::create($data);
 
-        Log::info('Комментарий успешно создан', ['id' => $comment->id]);
+        Cache::forget('comments_tree');
+
+        event(new CommentCreated($comment));
+
+        dispatch(new NotifyAdminOfNewComment($comment));
+        Log::info('Комментарий создан', ['id' => $comment->id]);
 
         return response()->json([
             'message' => 'Спасибо! Ваш комментарий добавлен.',
@@ -115,19 +120,18 @@ class CommentController extends Controller
 
     public function downloadAttachment(Comment $comment)
     {
-        Log::info('Запрос на скачивание файла', ['comment_id' => $comment->id, 'attachment_path' => $comment->attachment_path]);
+        Log::info('Запрос на скачивание файла', ['comment_id' => $comment->id]);
 
         if (!$comment->attachment_path || !Storage::disk('public')->exists($comment->attachment_path)) {
-            Log::warning('Файл не найден', ['attachment_path' => $comment->attachment_path]);
+            Log::warning('Файл не найден', ['path' => $comment->attachment_path]);
             return response()->json(['error' => 'Файл не найден'], 404);
         }
 
         $filePath = storage_path('app/public/' . $comment->attachment_path);
         $fileName = basename($filePath);
-
-        // Логирование MIME типа
         $mimeType = mime_content_type($filePath);
-        Log::info('MIME тип файла', ['mime_type' => $mimeType]);
+
+        Log::info('Скачивание файла', ['mime' => $mimeType]);
 
         return response()->download($filePath, $fileName, [
             'Content-Type' => $mimeType,
