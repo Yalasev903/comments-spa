@@ -20,7 +20,7 @@ docker compose up --build
 
 ## ⚙️ Стек
 
-- Laravel 12 (PHP 8.2)
+- Laravel 12 (PHP 8.4)
 - Vue 3 + Vite + Bootstrap
 - Docker + MySQL
 - Swagger (YAML)

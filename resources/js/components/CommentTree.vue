@@ -3,7 +3,8 @@
        <h3 class="mb-3">Список комментариев</h3>
    
        <div v-if="loading">Загрузка...</div>
-       <div v-else>
+   
+       <transition-group name="fade" tag="div" v-else>
          <comment-item
            v-for="comment in comments.data"
            :key="comment.id"
@@ -11,12 +12,12 @@
            :level="0"
            @comment-added="refreshTree"
          />
-       </div>
+       </transition-group>
      </div>
    </template>
    
    <script setup>
-   import { ref, watch } from 'vue'
+   import { ref, watch, onMounted, onUnmounted } from 'vue'
    import axios from 'axios'
    import CommentItem from './CommentItem.vue'
    
@@ -44,6 +45,28 @@
      loadComments()
    }
    
+   // При первой загрузке
    watch(() => props.reloadKey, loadComments, { immediate: true })
+   
+   // Обновление при добавлении комментариев в любом уровне
+   onMounted(() => {
+     window.addEventListener('refresh-comments', refreshTree)
+   })
+   
+   onUnmounted(() => {
+     window.removeEventListener('refresh-comments', refreshTree)
+   })
    </script>
+   
+   <style scoped>
+   .fade-enter-active,
+   .fade-leave-active {
+     transition: all 0.4s ease;
+   }
+   .fade-enter-from,
+   .fade-leave-to {
+     opacity: 0;
+     transform: translateY(10px);
+   }
+   </style>
    

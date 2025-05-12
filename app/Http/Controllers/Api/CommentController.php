@@ -35,7 +35,7 @@ class CommentController extends Controller
             'text'       => 'required|string',
             'captcha'    => 'required|string',
             'parent_id'  => 'nullable|exists:comments,id',
-            'attachment' => 'nullable|file|max:1024|mimes:jpg,jpeg,png,gif,txt',
+            'attachment' => 'nullable|file|max:1024|mimes:jpg,jpeg,png,gif,txt', // 1MB max
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -114,19 +114,24 @@ class CommentController extends Controller
     }
 
     public function downloadAttachment(Comment $comment)
-     {
-     if (!$comment->attachment_path || !Storage::disk('public')->exists($comment->attachment_path)) {
-          return response()->json(['error' => 'Файл не найден'], 404);
-     }
+    {
+        Log::info('Запрос на скачивание файла', ['comment_id' => $comment->id, 'attachment_path' => $comment->attachment_path]);
 
-     $filePath = storage_path('app/public/' . $comment->attachment_path);
-     $fileName = basename($filePath);
+        if (!$comment->attachment_path || !Storage::disk('public')->exists($comment->attachment_path)) {
+            Log::warning('Файл не найден', ['attachment_path' => $comment->attachment_path]);
+            return response()->json(['error' => 'Файл не найден'], 404);
+        }
 
-     return response()->download($filePath, $fileName, [
-          'Content-Type' => $comment->attachment_type === 'image' 
-               ? mime_content_type($filePath) 
-               : 'text/plain',
-          'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-     ]);
-     }
+        $filePath = storage_path('app/public/' . $comment->attachment_path);
+        $fileName = basename($filePath);
+
+        // Логирование MIME типа
+        $mimeType = mime_content_type($filePath);
+        Log::info('MIME тип файла', ['mime_type' => $mimeType]);
+
+        return response()->download($filePath, $fileName, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
 }
