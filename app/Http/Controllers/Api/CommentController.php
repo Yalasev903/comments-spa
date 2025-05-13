@@ -14,6 +14,7 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Response;
 use App\Jobs\NotifyAdminOfNewComment;
 use App\Events\CommentCreated;
+use App\Events\CommentPosted;
 
 class CommentController extends Controller
 {
@@ -92,7 +93,7 @@ class CommentController extends Controller
                 $data['attachment_path'] = $uploadPath;
                 Log::info('Вложение сохранено', ['path' => $uploadPath]);
             } catch (\Throwable $e) {
-                Log::error(' Ошибка при загрузке вложения: ' . $e->getMessage(), [
+                Log::error('Ошибка при загрузке вложения: ' . $e->getMessage(), [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                 ]);
@@ -108,6 +109,7 @@ class CommentController extends Controller
         Cache::forget('comments_tree');
 
         event(new CommentCreated($comment));
+        broadcast(new CommentPosted($comment))->toOthers();
 
         dispatch(new NotifyAdminOfNewComment($comment));
         Log::info('Комментарий создан', ['id' => $comment->id]);
