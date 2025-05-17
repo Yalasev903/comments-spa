@@ -28,6 +28,7 @@ services:
       REDIS_HOST: redis
     command: >
       sh -c "
+        cp .env.example .env || true &&
         wait-for-it.sh db 3306 &&
         composer install &&
         php artisan migrate &&
