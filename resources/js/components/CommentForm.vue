@@ -1,91 +1,91 @@
+
 <template>
-     <div class="card p-4 mt-4 shadow-sm">
-       <h2 class="mb-3">{{ parentId ? 'Ответить на комментарий' : 'Добавить комментарий' }}</h2>
+     <div class="mt-3">
+       <button v-if="!parentId && !showForm" class="btn btn-sm btn-outline-primary" @click="showForm = true">
+         ➕ Добавить комментарий
+       </button>
    
-       <form @submit.prevent="submit">
-         <!-- Имя -->
-         <div class="mb-3">
-           <label class="form-label">Имя *</label>
-           <input
-             v-model="form.user_name"
-             type="text"
-             class="form-control"
-             required
-             pattern="^[a-zA-Z0-9]+$"
-             title="Только латинские буквы и цифры"
-           />
-           <div class="text-danger" v-if="errors.user_name">{{ errors.user_name[0] }}</div>
-         </div>
-   
-         <!-- Email -->
-         <div class="mb-3">
-           <label class="form-label">Email *</label>
-           <input v-model="form.email" type="email" class="form-control" required />
-           <div class="text-danger" v-if="errors.email">{{ errors.email[0] }}</div>
-         </div>
-   
-         <!-- Домашняя страница -->
-         <div class="mb-3">
-           <label class="form-label">Домашняя страница</label>
-           <input v-model="form.home_page" type="url" class="form-control" />
-           <div class="text-danger" v-if="errors.home_page">{{ errors.home_page[0] }}</div>
-         </div>
-   
-         <!-- Панель форматирования -->
-         <div class="mb-2">
-           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="insertTag('<strong>', '</strong>')"><b>B</b></button>
-           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="insertTag('<i>', '</i>')"><i>I</i></button>
-           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="insertTag('<code>', '</code>')">Code</button>
-           <button type="button" class="btn btn-sm btn-outline-secondary" @click="insertTag('<a href=\'https://\'>', '</a>')">Link</button>
-         </div>
-   
-         <!-- Комментарий -->
-         <div class="mb-3">
-           <label class="form-label">Комментарий *</label>
-           <textarea v-model="form.text" class="form-control" rows="4" required></textarea>
-           <div class="text-danger" v-if="errors.text">{{ errors.text[0] }}</div>
-         </div>
-   
-         <!-- Предпросмотр -->
-         <div v-if="form.text" class="alert alert-light border mb-3">
-           <strong>Предпросмотр:</strong>
-           <div v-html="sanitizeHtml(form.text)"></div>
-         </div>
-   
-         <!-- CAPTCHA -->
-         <div class="mb-3">
-           <label class="form-label">Введите: <strong>{{ captchaText }}</strong></label>
-           <input v-model="form.captcha" type="text" class="form-control" required />
-           <div class="text-danger" v-if="errors.captcha">{{ errors.captcha[0] }}</div>
-         </div>
-   
-         <!-- Файл -->
-         <div class="mb-3">
-           <label class="form-label">Файл (JPG/PNG/GIF или TXT)</label>
-           <input type="file" @change="handleFile" class="form-control" />
-           <div v-if="preview" class="mt-2">
-             <strong>Превью:</strong><br />
-             <img v-if="isImage" :src="preview" class="img-fluid mt-1" style="max-width: 320px;" />
-             <pre v-else class="bg-light p-2">{{ fileName }}</pre>
+       <transition name="fade-scale">
+         <div v-if="parentId || showForm" class="card border shadow-sm p-3 mt-3">
+           <h6 class="mb-3 fw-bold">
+             {{ parentId ? 'Ответить на комментарий' : 'Добавить комментарий' }}
+           </h6>
+           <form @submit.prevent="submit" class="small">
+
+               <div class="mb-2">
+               <label class="form-label mb-1">Имя *</label>
+               <input
+                 v-model="form.user_name"
+                 type="text"
+                 class="form-control form-control-sm"
+                 required
+                 pattern="^[a-zA-Z0-9]+$"
+               />
+               <div class="text-danger small" v-if="errors.user_name">{{ errors.user_name[0] }}</div>
+             </div>
+       
+             <div class="mb-2">
+               <label class="form-label mb-1">Email *</label>
+               <input v-model="form.email" type="email" class="form-control form-control-sm" required />
+               <div class="text-danger small" v-if="errors.email">{{ errors.email[0] }}</div>
+             </div>
+       
+             <div class="mb-2">
+               <label class="form-label mb-1">Домашняя страница</label>
+               <input v-model="form.home_page" type="url" class="form-control form-control-sm" />
+               <div class="text-danger small" v-if="errors.home_page">{{ errors.home_page[0] }}</div>
+             </div>
+       
+             <div class="mb-2 d-flex gap-2 flex-wrap">
+               <button type="button" class="btn btn-sm btn-outline-secondary" @click="insertTag('<strong>', '</strong>')"><b>B</b></button>
+               <button type="button" class="btn btn-sm btn-outline-secondary" @click="insertTag('<i>', '</i>')"><i>I</i></button>
+               <button type="button" class="btn btn-sm btn-outline-secondary" @click="insertTag('<code>', '</code>')">Code</button>
+               <button type="button" class="btn btn-sm btn-outline-secondary" @click="insertTag('<a href=\'https://\'>', '</a>')">Link</button>
+             </div>
+       
+             <div class="mb-2">
+               <label class="form-label mb-1">Комментарий *</label>
+               <textarea v-model="form.text" class="form-control form-control-sm" rows="3" required></textarea>
+               <div class="text-danger small" v-if="errors.text">{{ errors.text[0] }}</div>
+             </div>
+       
+             <div v-if="form.text" class="alert alert-light border small mb-2">
+               <strong>Предпросмотр:</strong>
+               <div v-html="sanitizeHtml(form.text)"></div>
+             </div>
+       
+             <!-- CAPTCHA -->
+             <div class="mb-2">
+               <label class="form-label mb-1">Введите: <strong>{{ captchaText }}</strong></label>
+               <input v-model="form.captcha" type="text" class="form-control form-control-sm" required />
+               <div class="text-danger small" v-if="errors.captcha">{{ errors.captcha[0] }}</div>
+             </div>
+       
+             <div class="mb-2">
+               <label class="form-label mb-1">Файл (JPG/PNG/GIF или TXT)</label>
+               <input type="file" @change="handleFile" class="form-control form-control-sm" />
+               <div v-if="preview" class="mt-2">
+                 <strong class="small">Превью:</strong><br />
+                 <img v-if="isImage" :src="preview" class="img-fluid rounded mt-1" style="max-width: 200px;" />
+                 <pre v-else class="bg-light p-2 small">{{ fileName }}</pre>
+               </div>
+             </div>
+       
+             <div v-if="errors.general" class="alert alert-danger mt-2 small">
+               {{ errors.general[0] }}
+             </div>
+       
+             <button class="btn btn-sm btn-primary mt-1" :disabled="submitting">Отправить</button>
+           </form>
+       
+           <div v-if="successMessage" class="alert alert-success mt-2 small">
+             {{ successMessage }}
            </div>
          </div>
-   
-         <!-- Общая ошибка -->
-         <div v-if="errors.general" class="alert alert-danger mt-3">
-           {{ errors.general[0] }}
-         </div>
-   
-         <!-- Кнопка -->
-         <button class="btn btn-primary" :disabled="submitting">Отправить</button>
-       </form>
-   
-       <!-- Успешное сообщение -->
-       <div v-if="successMessage" class="alert alert-success mt-3">
-         {{ successMessage }}
-       </div>
+       </transition>
      </div>
    </template>
-   
+         
    <script setup>
    import { ref, defineProps, defineEmits, watch } from 'vue'
    import axios from 'axios'
@@ -98,6 +98,8 @@
    })
    
    const emit = defineEmits(['comment-added'])
+   
+   const showForm = ref(false)
    
    const parentId = ref(props.parentId)
    watch(() => props.parentId, newVal => {
@@ -209,7 +211,6 @@
        successMessage.value = data.message
        emit('comment-added')
    
-       // Очистка формы, не теряя parent_id
        form.value.user_name = ''
        form.value.email = ''
        form.value.home_page = ''
@@ -237,4 +238,61 @@
      }
    }
    </script>
+   
+   <style scoped>
+   .fade-scale-enter-active,
+   .fade-scale-leave-active {
+     transition: all 0.5s ease-in-out;
+   }
+   .fade-scale-enter-from,
+   .fade-scale-leave-to {
+     opacity: 0;
+     transform: scale(0.98);
+   }
+   
+   /* Мобильная адаптация */
+@media (max-width: 576px) {
+  .form-control,
+  .form-label,
+  textarea,
+  input,
+  .btn,
+  .text-muted,
+  .alert {
+    font-size: 1.2rem !important;
+    line-height: 1.4;
+  }
+
+  .form-control,
+  textarea,
+  input {
+    padding: 0.75rem 1rem;
+  }
+
+  .form-label {
+    margin-bottom: 0.25rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.2rem;
+    font-weight: 600;
+    width: 100%;
+    border-radius: 0.4rem;
+  }
+
+  .card {
+    padding: 1.25rem !important;
+    border-radius: 0.75rem;
+  }
+
+  .mb-2 {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .alert {
+    padding: 1rem;
+  }
+   }
+   </style>
+   
    

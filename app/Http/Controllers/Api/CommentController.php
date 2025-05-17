@@ -18,13 +18,17 @@ use App\Events\CommentPosted;
 
 class CommentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $comments = Cache::remember('comments_tree', 60, function () {
+        $page = (int) $request->get('page', 1);
+        $perPage = 5; // Можно вынести в .env или сделать параметром, если надо
+        $cacheKey = "comments_tree_page_{$page}_{$perPage}";
+
+        $comments = Cache::remember($cacheKey, 60, function () use ($perPage) {
             return Comment::with('children')
                 ->whereNull('parent_id')
                 ->latest()
-                ->paginate(25);
+                ->paginate($perPage);
         });
 
         return response()->json($comments);
@@ -106,7 +110,8 @@ class CommentController extends Controller
 
         $comment = Comment::create($data);
 
-        Cache::forget('comments_tree');
+        // Сброс кэша всех страниц
+        $this->clearCommentsCache();
 
         event(new CommentCreated($comment));
         broadcast(new CommentPosted($comment))->toOthers();
@@ -118,6 +123,16 @@ class CommentController extends Controller
             'message' => 'Спасибо! Ваш комментарий добавлен.',
             'comment' => $comment,
         ], 201);
+    }
+
+    // Сброс кэша пагинации комментариев (простая версия — flush, можно оптимизировать)
+    private function clearCommentsCache()
+    {
+        Cache::flush();
+        // Или, если нужно только комментарии:
+        // foreach (range(1, 20) as $page) { // 20 страниц — запасом
+        //     Cache::forget("comments_tree_page_{$page}_5");
+        // }
     }
 
     public function downloadAttachment(Comment $comment)
