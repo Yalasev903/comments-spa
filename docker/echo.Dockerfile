@@ -8,4 +8,4 @@ COPY . .
 
 RUN npm install
 
-CMD ["laravel-echo-server", "start"]
+CMD ["laravel-echo-server", "start", "--force"]

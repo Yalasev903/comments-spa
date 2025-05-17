@@ -8,11 +8,21 @@ import App from './App.vue'
 import CommentForm from './components/CommentForm.vue'
 import CommentTree from './components/CommentTree.vue'
 
-
+// Подключаем socket.io
 window.io = io
+
+// Автоматическое определение WebSocket схемы и хоста
+const echoHost = import.meta.env.VITE_ECHO_HOST || 'localhost:6001'
+const echoScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+const fullHost = `ws://127.0.0.1:6001`
+
+console.log('🌐 VITE_ECHO_HOST:', echoHost)
+console.log('🔌 Подключение к WebSocket:', fullHost)
+
 window.Echo = new Echo({
     broadcaster: 'socket.io',
-    host: window.location.hostname + ':6001',
+    host: fullHost,
+    path: '/socket.io',
     transports: ['websocket'],
     enabledTransports: ['ws'],
     forceTLS: false,
@@ -21,11 +31,34 @@ window.Echo = new Echo({
     reconnectionDelay: 2000,
 })
 
-window.Echo.channel('comments')
-    .listen('.comment.created', (e) => {
-        console.log('📡 Новый комментарий по WebSocket:', e.comment)
+// События подключения сокета
+if (window.Echo.connector && window.Echo.connector.socket) {
+    window.Echo.connector.socket.on('connect', () => {
+        console.log('✅ WebSocket подключён')
     })
 
+    window.Echo.connector.socket.on('disconnect', () => {
+        console.warn('❌ WebSocket отключён')
+    })
+
+    window.Echo.connector.socket.on('error', (error) => {
+        console.error('⚠ Ошибка WebSocket:', error)
+    })
+
+    window.Echo.connector.socket.on('reconnect_attempt', () => {
+        console.log('🔁 Повторная попытка подключения к WebSocket...')
+    })
+} else {
+    console.warn('⚠ Echo.connector.socket не инициализирован — WebSocket не подключён!')
+}
+
+// Подписка на канал и прослушка события
+window.Echo.channel('comments')
+    .listen('.comment.created', (e) => {
+        console.log('📡 Новый комментарий по WebSocket:', e)
+    })
+
+// Создание Vue приложения
 const app = createApp(App)
 app.component('comment-form', CommentForm)
 app.component('comment-tree', CommentTree)

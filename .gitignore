@@ -2,6 +2,7 @@ vendor/
 node_modules/
 .env
 .env.*
+!.env.example
 storage/*.key
 /public/storage
 /storage/logs/*.log

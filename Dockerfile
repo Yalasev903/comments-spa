@@ -1,6 +1,6 @@
 FROM php:8.4-fpm
 
-# Установка зависимостей
+# Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
     git curl zip unzip vim \
     libpng-dev libjpeg-dev libfreetype6-dev \
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable redis \
     && git config --global --add safe.directory /var/www
 
-# Установка composer
+# Установка Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
@@ -25,6 +25,7 @@ COPY . .
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
+# Только build для prod, vite dev — в отдельном контейнере
 RUN npm install && npm run build && npm install -g laravel-echo-server
 
 EXPOSE 8000

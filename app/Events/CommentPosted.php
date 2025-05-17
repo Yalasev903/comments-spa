@@ -24,4 +24,14 @@ class CommentPosted implements ShouldBroadcastNow
     {
         return 'comment.created';
     }
+
+    public function broadcastWith(): array
+     {
+     return [
+          'id' => $this->comment->id,
+          'text' => $this->comment->text,
+          'user_name' => $this->comment->user_name,
+          'email' => $this->comment->email,
+     ];
+     }
 }

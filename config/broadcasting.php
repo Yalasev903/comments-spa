@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'pusher'),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,7 +46,7 @@ return [
             ],
         ],
 
-          'pusher' => [
+         'pusher' => [
           'driver' => 'pusher',
           'key' => env('PUSHER_APP_KEY', 'local'),
           'secret' => env('PUSHER_APP_SECRET', 'local'),
@@ -59,7 +59,8 @@ return [
                'port' => env('PUSHER_PORT', 6001),
                'scheme' => env('PUSHER_SCHEME', 'http'),
           ],
-     ],
+          ],
+ 
 
      'redis' => [
           'driver' => 'redis',
