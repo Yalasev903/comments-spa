@@ -115,7 +115,6 @@ docker-compose exec app php artisan test
 |make migrate	| Полная миграция и наполнение тестовыми данными    |
 |make link	| Линковка storage (Laravel)                        |
 |make cache	|Очистка и пересборка конфиг-кеша, маршрутов        |
-|make test-all	|Прогон всех тестов с подробным выводом             |
 |make test-comment	|Прогон только теста API комментариев          |
 |make swagger	|Генерация Swagger-документации                     |
 |make fix-perms	|Быстрое исправление прав на storage/bootstrap |
