@@ -56,6 +56,7 @@ if (window.Echo.connector && window.Echo.connector.socket) {
 window.Echo.channel('comments')
     .listen('.comment.created', (e) => {
         console.log('📡 Новый комментарий по WebSocket:', e)
+        window.dispatchEvent(new Event('refresh-comments'))
     })
 
 // Создание Vue приложения

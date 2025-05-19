@@ -70,6 +70,26 @@ const treeTop = ref(null)
 const sortBy = ref('created_at')
 const sortOrder = ref('desc')
 
+// Обновление при первом рендере и при изменении reloadKey
+onMounted(() => {
+  loadComments(1)
+  window.addEventListener('refresh-comments', refreshTree)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('refresh-comments', refreshTree)
+})
+
+// Вот это — самый главный фикс:
+watch(
+  () => props.reloadKey,
+  () => loadComments(1),
+  { immediate: false }
+)
+
+// При смене сортировки сбрасываем на первую страницу и делаем новый запрос
+watch([sortBy, sortOrder], () => loadComments(1))
+
 async function loadComments(page = 1) {
   loading.value = true
   try {
@@ -115,18 +135,6 @@ const pagesToShow = computed(() => {
     pages.push(i)
   }
   return pages
-})
-
-watch(() => props.reloadKey, () => loadComments(currentPage.value), { immediate: true })
-
-watch([sortBy, sortOrder], () => loadComments(1))
-
-onMounted(() => {
-  window.addEventListener('refresh-comments', refreshTree)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('refresh-comments', refreshTree)
 })
 </script>
 
