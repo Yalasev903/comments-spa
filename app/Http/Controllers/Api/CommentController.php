@@ -18,21 +18,30 @@ use App\Events\CommentPosted;
 
 class CommentController extends Controller
 {
-    public function index(Request $request)
-    {
-        $page = (int) $request->get('page', 1);
-        $perPage = 5; // Можно вынести в .env или сделать параметром, если надо
-        $cacheKey = "comments_tree_page_{$page}_{$perPage}";
+     public function index(Request $request)
+     {
+     $page = (int) $request->get('page', 1);
+     $perPage = 25;
 
-        $comments = Cache::remember($cacheKey, 60, function () use ($perPage) {
-            return Comment::with('children')
-                ->whereNull('parent_id')
-                ->latest()
-                ->paginate($perPage);
-        });
+     // Новое: сортировка с валидацией
+     $sortBy = $request->get('sort_by', 'created_at');
+     $order = $request->get('order', 'desc');
+     $allowedSorts = ['created_at', 'user_name', 'email'];
+     $sortBy = in_array($sortBy, $allowedSorts) ? $sortBy : 'created_at';
+     $order = in_array($order, ['asc', 'desc']) ? $order : 'desc';
 
-        return response()->json($comments);
-    }
+     $cacheKey = "comments_tree_{$sortBy}_{$order}_page_{$page}_{$perPage}";
+
+     $comments = Cache::remember($cacheKey, 60, function () use ($perPage, $sortBy, $order) {
+          return \App\Models\Comment::with('children')
+               ->whereNull('parent_id')
+               ->orderBy($sortBy, $order)
+               ->paginate($perPage);
+     });
+
+     return response()->json($comments);
+     }
+
 
     public function store(Request $request)
     {
