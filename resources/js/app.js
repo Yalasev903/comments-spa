@@ -8,13 +8,16 @@ import App from './App.vue'
 import CommentForm from './components/CommentForm.vue'
 import CommentTree from './components/CommentTree.vue'
 
-// Подключаем socket.io
 window.io = io
 
-// Автоматическое определение WebSocket схемы и хоста
-const echoHost = import.meta.env.VITE_ECHO_HOST || 'localhost:6001'
+// В локальной .env: VITE_ECHO_HOST=127.0.0.1:6001
+
+let echoHost = import.meta.env.VITE_ECHO_HOST
+if (!echoHost) {
+    echoHost = window.location.hostname + ':6001'
+}
 const echoScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-const fullHost = `ws://127.0.0.1:6001`
+const fullHost = `${echoScheme}://${echoHost}`
 
 console.log('🌐 VITE_ECHO_HOST:', echoHost)
 console.log('🔌 Подключение к WebSocket:', fullHost)
@@ -25,7 +28,7 @@ window.Echo = new Echo({
     path: '/socket.io',
     transports: ['websocket'],
     enabledTransports: ['ws'],
-    forceTLS: false,
+    forceTLS: echoScheme === 'wss',
     disableStats: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 2000,
