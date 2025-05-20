@@ -30,4 +30,4 @@ RUN npm install && npm run build && npm install -g laravel-echo-server
 
 EXPOSE 8000
 
-CMD ["php-fpm"]
+# CMD ["php-fpm"]
