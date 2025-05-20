@@ -30,6 +30,7 @@ RUN npm install && npm run build && npm install -g laravel-echo-server
 
 RUN echo "Railway Rebuild Fix"
 
-EXPOSE 8000
+EXPOSE 8080
 
 # CMD ["php-fpm"]
+CMD php artisan serve --host=0.0.0.0 --port=8080
