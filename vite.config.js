@@ -28,4 +28,9 @@ export default defineConfig({
             protocol: 'ws',
         },
     },
+        base: '/build/',
+        build: {
+            outDir: 'public/build',
+            emptyOutDir: true,
+    },
 });
