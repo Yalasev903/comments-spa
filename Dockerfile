@@ -28,6 +28,8 @@ RUN chown -R www-data:www-data /var/www \
 # Только build для prod, vite dev — в отдельном контейнере
 RUN npm install && npm run build && npm install -g laravel-echo-server
 
+RUN echo "Railway Rebuild Fix"
+
 EXPOSE 8000
 
 # CMD ["php-fpm"]
