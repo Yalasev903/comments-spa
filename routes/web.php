@@ -5,7 +5,7 @@ use Inertia\Inertia;
 
 Route::get('/{any}', function () {
      return view('home');
- })->where('any', '.*');
+ })->where('any', '^(?!build).*$');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
