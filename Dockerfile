@@ -42,7 +42,7 @@ RUN chown -R www-data:www-data /var/www \
 EXPOSE 8080
 
 # 10. Запуск artisan-команд и сервера Laravel только на старте (CMD)
-CMD php artisan key:generate --force \
- && php artisan storage:link || true \
+CMD php artisan storage:link || true \
  && php artisan migrate --force || true \
  && php artisan serve --host=0.0.0.0 --port=8080
+
