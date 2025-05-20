@@ -38,7 +38,7 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 RUN php artisan storage:link || true
 
 # 9. Миграции (для dev/CI/CD — production обычно мигрируется отдельно, но для Railway удобно)
-RUN php artisan key:generate --force && php artisan migrate --force || true
+RUN cp .env.example .env && php artisan key:generate --force && php artisan migrate --force || true
 
 # 10. Финальные права (на всякий случай)
 RUN chown -R www-data:www-data /var/www \
