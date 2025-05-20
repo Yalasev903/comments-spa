@@ -1,6 +1,6 @@
 FROM php:8.4-fpm
 
-# 1. Установка системных зависимостей
+# 1. Установка зависимостей
 RUN apt-get update && apt-get install -y \
     git curl zip unzip vim \
     libpng-dev libjpeg-dev libfreetype6-dev \
@@ -21,31 +21,28 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # 3. Рабочая директория
 WORKDIR /var/www
 
-# 4. Копирование всех файлов (после WORKDIR!)
+# 4. Копирование всех файлов
 COPY . .
 
-# 5. Права доступа к storage и bootstrap/cache (важно для production!)
+# 5. Права доступа
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
-# 6. Установка node-пакетов и сборка фронта (vite/prod)
+# 6. node-пакеты, vite build, echo-server
 RUN npm install && npm run build && npm install -g laravel-echo-server
 
-# 7. Установка php-зависимостей через Composer
+# 7. composer install
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# 8. Storage link (не ошибка, если уже есть)
-RUN php artisan storage:link || true
-
-# 9. Миграции (для dev/CI/CD — production обычно мигрируется отдельно, но для Railway удобно)
-RUN php artisan key:generate --force && php artisan migrate --force || true
-
-# 10. Финальные права (на всякий случай)
+# 8. Финальные права (на всякий случай)
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 
-# 11. Открываем порт
+# 9. Открываем порт
 EXPOSE 8080
 
-# 12. Запуск Laravel встроенного сервера (требуется для Railway)
-CMD php artisan serve --host=0.0.0.0 --port=8080
+# 10. Запуск artisan-команд и сервера Laravel только на старте (CMD)
+CMD php artisan key:generate --force \
+ && php artisan storage:link || true \
+ && php artisan migrate --force || true \
+ && php artisan serve --host=0.0.0.0 --port=8080
